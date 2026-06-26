@@ -4,6 +4,7 @@ const path = require('path');
 
 const ROOT = __dirname;
 const PORT = Number(process.env.PORT || 3000);
+const HOST = process.env.HOST || '0.0.0.0';
 const MAX_BODY_BYTES = 1024 * 32;
 
 loadDotEnv(path.join(ROOT, '.env'));
@@ -89,8 +90,8 @@ const server = http.createServer(async (req, res) => {
   }
 });
 
-server.listen(PORT, () => {
-  console.log(`PSB check-in copywriter running on http://localhost:${PORT}`);
+server.listen(PORT, HOST, () => {
+  console.log(`PSB check-in copywriter running on http://${HOST}:${PORT}`);
 });
 
 async function handleGenerate(req, res) {
