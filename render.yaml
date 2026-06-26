@@ -1,0 +1,14 @@
+services:
+  - type: web
+    name: psb-checkin-copywriter
+    env: node
+    plan: free
+    buildCommand: ""
+    startCommand: "npm start"
+    envVars:
+      - key: ARK_BASE_URL
+        value: https://ark.cn-beijing.volces.com/api/v3
+      - key: ARK_API_KEY
+        sync: false
+      - key: ARK_MODEL
+        sync: false

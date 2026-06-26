@@ -1,0 +1,762 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>Paris School of Business · 典礼打卡文案工具</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@500;700;900&family=Playfair+Display:wght@600;700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --brand-blue:#1e3766;
+    --brand-blue-dark:#16284c;
+    --brand-blue-deep:#0f1c38;
+    --brand-red:#9e375a;
+    --brand-red-dark:#7e2b47;
+    --ink:#141823;
+    --ink-2:#3a4154;
+    --ink-3:#6b7284;
+    --line:#e7e9f0;
+    --paper:#ffffff;
+    --paper-2:#f5f6fa;
+    --paper-3:#edeff5;
+    --gold:#b58a3c;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  html,body{margin:0;padding:0;}
+  body{
+    font-family:'Inter','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif;
+    background:var(--paper-2);
+    color:var(--ink);
+    min-height:100vh;
+    -webkit-font-smoothing:antialiased;
+    font-feature-settings:"ss01","cv11";
+  }
+  .serif{font-family:'Noto Serif SC',serif;}
+  .display{font-family:'Playfair Display',serif;}
+  .app{
+    max-width:430px;
+    margin:0 auto;
+    min-height:100vh;
+    background:var(--paper);
+    position:relative;
+    box-shadow:0 0 60px rgba(15,28,56,0.08);
+    overflow:hidden;
+  }
+
+  /* ============ Top brand bar ============ */
+  .topbar{
+    height:5px;
+    background:linear-gradient(90deg,var(--brand-blue) 0%, var(--brand-blue) 60%, var(--brand-red) 60%, var(--brand-red) 100%);
+  }
+  .header{
+    padding:14px 22px;
+    border-bottom:3px solid var(--brand-red);
+    display:flex;align-items:center;gap:13px;
+    position:relative;
+    background:var(--brand-blue);
+  }
+  .brand-cn{
+    font-family:'Noto Serif SC',serif;
+    font-weight:900;
+    font-size:18px;
+    line-height:1.15;
+    color:#fff;
+    letter-spacing:1px;
+    white-space:nowrap;
+    flex-shrink:0;
+  }
+  .logo-img{
+    height:56px;
+    width:auto;
+    max-width:34%;
+    display:block;
+    object-fit:contain;
+    filter:brightness(0) invert(1);
+  }
+  .accred{
+    margin-left:auto;
+    display:flex;flex-direction:column;align-items:center;gap:7px;
+    padding-left:16px;
+    align-self:stretch;
+    justify-content:center;
+    border-left:1px solid rgba(255,255,255,0.22);
+  }
+  .accred-img{
+    height:24px;width:auto;display:block;
+    opacity:0.95;
+  }
+  .accred-cap{
+    font-size:10px;font-weight:700;color:rgba(255,255,255,0.85);
+    letter-spacing:2px;
+  }
+
+  /* ============ Hero banner ============ */
+  .hero-banner{
+    width:100%;
+    background:var(--brand-blue);
+    display:block;
+    line-height:0;
+    border-bottom:3px solid var(--brand-red);
+  }
+  .hero-banner-img{
+    width:100%;
+    height:auto;
+    display:block;
+  }
+
+  /* ============ Sections ============ */
+  .section{padding:22px 22px 4px;}
+  .section-head{
+    display:flex;flex-direction:column;align-items:flex-start;gap:6px;
+    margin-bottom:14px;
+  }
+  .section-title{
+    display:flex;align-items:center;gap:10px;
+    font-size:11px;font-weight:700;color:var(--ink-2);
+    letter-spacing:1.6px;text-transform:uppercase;
+  }
+  .section-title .step{
+    width:20px;height:20px;
+    background:var(--brand-blue);color:#fff;
+    display:flex;align-items:center;justify-content:center;
+    font-size:11px;font-weight:800;
+    font-family:'Inter',sans-serif;
+  }
+  .section-hint{
+    font-size:10px;color:var(--ink-3);letter-spacing:1.8px;
+    font-weight:600;
+    padding-left:30px;
+  }
+
+  /* ============ Mode selector ============ */
+  .mode-grid{
+    display:grid;grid-template-columns:1fr 1fr;gap:10px;
+  }
+  .mode-card{
+    border:1.5px solid var(--line);
+    background:#fff;
+    padding:18px 16px;
+    cursor:pointer;
+    transition:all 0.25s cubic-bezier(.2,.8,.2,1);
+    text-align:left;
+    position:relative;
+    overflow:hidden;
+    font-family:inherit;
+    display:flex;flex-direction:column;gap:6px;
+  }
+  .mode-card:active{transform:scale(0.98);}
+  .mode-card .title{
+    font-family:'Noto Serif SC',serif;
+    font-weight:900;font-size:19px;color:var(--ink);
+    line-height:1.2;
+  }
+  .mode-card .meta{
+    font-size:10.5px;color:var(--ink-3);
+    letter-spacing:0.3px;
+  }
+  .mode-card.active.opening{
+    border-color:var(--brand-blue);
+    background:linear-gradient(180deg,rgba(30,55,102,0.05),rgba(30,55,102,0.01));
+  }
+  .mode-card.active.opening .title{color:var(--brand-blue);}
+  .mode-card.active.graduation{
+    border-color:var(--brand-red);
+    background:linear-gradient(180deg,rgba(158,55,90,0.05),rgba(158,55,90,0.01));
+  }
+  .mode-card.active.graduation .title{color:var(--brand-red);}
+  .mode-card .ribbon{
+    position:absolute;left:0;bottom:0;
+    height:3px;width:0;background:var(--brand-blue);
+    transition:width .35s cubic-bezier(.2,.8,.2,1);
+  }
+  .mode-card.active.opening .ribbon{width:100%;background:var(--brand-blue);}
+  .mode-card.active.graduation .ribbon{width:100%;background:var(--brand-red);}
+
+  /* ============ Program selector ============ */
+  .prog-grid{
+    display:grid;grid-template-columns:1fr 1fr;gap:10px;
+  }
+  .prog{
+    border:1.5px solid var(--line);
+    background:#fff;
+    padding:13px 14px;
+    text-align:left;
+    cursor:pointer;
+    transition:all .2s ease;
+    position:relative;
+    font-family:inherit;
+    display:flex;align-items:center;gap:11px;
+    min-height:74px;
+    min-width:0;
+    overflow:hidden;
+  }
+  .prog:active{transform:scale(0.98);}
+  .prog .code{
+    width:38px;height:38px;flex-shrink:0;
+    border:1.5px solid var(--brand-blue);
+    color:var(--brand-blue);
+    display:flex;align-items:center;justify-content:center;
+    font-weight:800;font-size:10.5px;letter-spacing:0;
+    font-family:'Inter',sans-serif;
+  }
+  .prog .meta-wrap{
+    min-width:0;flex:1 1 0;overflow:hidden;
+    display:flex;flex-direction:column;gap:3px;
+  }
+  .prog .name{
+    display:block;
+    font-weight:700;font-size:13.5px;color:var(--ink);
+    line-height:1.2;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  }
+  .prog .desc{
+    display:block;
+    font-size:9px;color:var(--ink-3);
+    margin-top:0;letter-spacing:0.1px;
+    line-height:1.3;
+    white-space:normal;
+    word-break:break-word;
+  }
+  .prog.selected{
+    border-color:var(--brand-blue);
+    background:linear-gradient(180deg,rgba(30,55,102,0.05),#fff);
+  }
+  .prog.selected .code{
+    background:var(--brand-blue);color:#fff;
+  }
+  .prog.selected::after{
+    content:"✓";
+    position:absolute;top:6px;right:8px;
+    font-size:11px;color:var(--brand-blue);font-weight:800;
+  }
+  body.mode-graduation .prog.selected{
+    border-color:var(--brand-red);
+    background:linear-gradient(180deg,rgba(158,55,90,0.05),#fff);
+  }
+  body.mode-graduation .prog.selected .code{
+    background:var(--brand-red);color:#fff;border-color:var(--brand-red);
+  }
+  body.mode-graduation .prog.selected::after{color:var(--brand-red);}
+
+  /* ============ Submit button ============ */
+  .submit-wrap{padding:22px 22px 0;}
+  .submit{
+    width:100%;
+    padding:16px;
+    background:var(--ink);
+    color:#fff;
+    border:0;
+    font-family:inherit;
+    font-weight:700;
+    font-size:14px;
+    letter-spacing:1.5px;
+    cursor:pointer;
+    display:flex;align-items:center;justify-content:center;gap:10px;
+    transition:all .25s;
+    position:relative;
+    overflow:hidden;
+  }
+  .submit:disabled{opacity:0.55;cursor:not-allowed;}
+  .submit .arrow{transition:transform .3s;}
+  .submit:not(:disabled):hover .arrow{transform:translateX(4px);}
+  .submit:not(:disabled):active{transform:scale(0.99);}
+  .submit.opening{background:var(--brand-blue);}
+  .submit.graduation{background:var(--brand-red);}
+
+  /* ============ Output ============ */
+  .output-wrap{padding:24px 22px 0;}
+  .output-card{
+    border:1.5px solid var(--line);
+    background:#fff;
+    position:relative;
+    overflow:hidden;
+  }
+  .output-accent{
+    height:5px;background:var(--brand-blue);
+    transition:background .4s;
+  }
+  body.mode-graduation .output-accent{background:var(--brand-red);}
+  .output-head{
+    padding:14px 16px 10px;
+    border-bottom:1px dashed var(--line);
+    display:flex;align-items:center;justify-content:space-between;
+  }
+  .output-head .label{
+    font-size:10px;font-weight:700;letter-spacing:1.8px;
+    color:var(--brand-blue);text-transform:uppercase;
+  }
+  body.mode-graduation .output-head .label{color:var(--brand-red);}
+  .output-head .seal{
+    font-size:9.5px;color:var(--ink-3);
+    display:flex;align-items:center;gap:5px;
+    letter-spacing:0.4px;
+  }
+  .output-head .seal::before{
+    content:"";width:6px;height:6px;background:var(--brand-red);border-radius:50%;
+  }
+  .output-body{
+    padding:16px;
+    font-size:13.5px;line-height:1.75;color:var(--ink);
+    max-height:380px;overflow-y:auto;
+    -webkit-user-select:text;user-select:text;
+  }
+  .output-body .first-line{
+    font-family:'Noto Serif SC',serif;
+    font-size:15.5px;font-weight:800;color:var(--ink);
+    border-left:3px solid var(--brand-red);
+    padding-left:10px;margin-bottom:14px;line-height:1.4;
+  }
+  body.mode-graduation .output-body .first-line{border-left-color:var(--brand-red);}
+  body.mode-opening .output-body .first-line{border-left-color:var(--brand-blue);}
+  .output-body p{margin:0 0 10px;}
+  .output-body .tag{
+    color:var(--brand-blue);
+    font-size:12.5px;display:inline-block;margin-right:6px;
+    font-weight:600;
+  }
+  body.mode-graduation .output-body .tag{color:var(--brand-red);}
+  .output-footer{
+    padding:12px 16px 16px;
+    border-top:1px solid var(--line);
+    background:var(--paper-2);
+  }
+  .copy-btn{
+    width:100%;
+    padding:14px;
+    background:var(--ink);
+    color:#fff;
+    border:0;
+    font-family:inherit;font-weight:700;font-size:13px;
+    letter-spacing:1.5px;cursor:pointer;
+    display:flex;align-items:center;justify-content:center;gap:9px;
+    transition:all .2s;
+  }
+  .copy-btn:active{transform:scale(0.98);}
+  .copy-btn.opening{background:var(--brand-blue);}
+  .copy-btn.graduation{background:var(--brand-red);}
+
+  .skeleton{
+    padding:36px 18px;text-align:center;
+    display:flex;flex-direction:column;align-items:center;gap:14px;
+  }
+  .spinner{
+    width:34px;height:34px;
+    border:2.5px solid var(--paper-3);
+    border-top-color:var(--brand-blue);
+    border-radius:50%;
+    animation:spin .9s linear infinite;
+  }
+  body.mode-graduation .spinner{border-top-color:var(--brand-red);}
+  @keyframes spin{to{transform:rotate(360deg);}}
+  .skeleton .txt{
+    font-size:11px;color:var(--ink-3);letter-spacing:1.5px;
+  }
+
+  /* ============ Footer ============ */
+  .foot{
+    padding:24px 22px 30px;
+    text-align:center;
+    font-size:10px;color:var(--ink-3);letter-spacing:0.8px;
+    line-height:1.7;
+  }
+  .foot .divider{
+    display:flex;align-items:center;gap:10px;
+    margin-bottom:16px;
+    font-size:9.5px;color:var(--ink-3);
+    letter-spacing:2px;font-weight:600;
+    text-transform:uppercase;
+  }
+  .foot .divider .bar{flex:1;height:1px;background:var(--line);}
+  .foot .divider .mid{
+    display:flex;align-items:center;gap:6px;
+  }
+  .foot .divider .mid b{width:7px;height:7px;background:var(--brand-blue);}
+  .foot .divider .mid i{width:7px;height:7px;background:var(--brand-red);}
+  .foot .official{
+    color:var(--brand-blue);font-weight:700;
+    letter-spacing:1.5px;
+  }
+
+  /* Toast */
+  .toast{
+    position:fixed;left:50%;bottom:30px;transform:translate(-50%,20px);
+    opacity:0;pointer-events:none;
+    background:var(--ink);color:#fff;
+    padding:12px 22px;font-size:12px;font-weight:600;
+    letter-spacing:0.8px;
+    display:flex;align-items:center;gap:9px;
+    transition:all .35s cubic-bezier(.2,.8,.2,1);
+    z-index:100;
+    border-left:3px solid var(--brand-red);
+  }
+  .toast.show{opacity:1;transform:translate(-50%,0);pointer-events:auto;}
+  .toast.err{border-left-color:#e0506e;}
+  .toast.ok{border-left-color:#2ea76a;}
+  .toast .ico{
+    width:18px;height:18px;border-radius:50%;
+    background:rgba(255,255,255,0.15);
+    display:flex;align-items:center;justify-content:center;
+    font-size:11px;font-weight:800;
+  }
+
+  .reveal{animation:rev .45s cubic-bezier(.2,.8,.2,1);}
+  @keyframes rev{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);}}
+  .hidden{display:none !important;}
+</style>
+</head>
+<body class="mode-none">
+  <div class="app">
+
+    <!-- Brand header on blue -->
+    <header class="header">
+      <img class="logo-img" src="assets/psb-logo.png" alt="Paris School of Business" />
+      <span class="brand-cn">巴黎商学院</span>
+      <div class="accred">
+        <img class="accred-img" src="assets/psb-accred.png" alt="AACSB AMBA EQUIS" />
+        <span class="accred-cap">三皇冠认证</span>
+      </div>
+    </header>
+
+    <!-- Hero banner -->
+    <section class="hero-banner">
+      <img class="hero-banner-img" src="assets/psb-hero.png" alt="Build bridges, shape a better world" />
+    </section>
+
+    <!-- Mode selector -->
+    <section class="section">
+      <div class="section-head">
+        <div class="section-title">
+          <span class="step">1</span>
+          <span>选择典礼场景</span>
+        </div>
+        <span class="section-hint">CÉRÉMONIE</span>
+      </div>
+      <div class="mode-grid">
+        <button class="mode-card" id="mode-opening" onclick="setMode('opening')">
+          <span class="title serif">开学典礼</span>
+          <span class="meta">学术起点 · 入学打卡</span>
+          <span class="ribbon"></span>
+        </button>
+        <button class="mode-card" id="mode-graduation" onclick="setMode('graduation')">
+          <span class="title serif">毕业典礼</span>
+          <span class="meta">高光时刻 · 荣耀加冕</span>
+          <span class="ribbon"></span>
+        </button>
+      </div>
+    </section>
+
+    <!-- Program selector -->
+    <section class="section">
+      <div class="section-head">
+        <div class="section-title">
+          <span class="step">2</span>
+          <span>选择您的专业项目</span>
+        </div>
+        <span class="section-hint">PROGRAMME</span>
+      </div>
+      <div class="prog-grid">
+        <button class="prog selected" id="prog-EMIF" onclick="selectProgram('EMIF')">
+          <span class="code">EMIF</span>
+          <span class="meta-wrap">
+            <span class="name">国际金融硕士</span>
+            <span class="desc">Executive Master in International Finance</span>
+          </span>
+        </button>
+        <button class="prog" id="prog-EMAP" onclick="selectProgram('EMAP')">
+          <span class="code">EMAP</span>
+          <span class="meta-wrap">
+            <span class="name">应用心理学管理硕士</span>
+            <span class="desc">Executive Master in Applied Psychology &amp; Business Management</span>
+          </span>
+        </button>
+        <button class="prog" id="prog-EMLF" onclick="selectProgram('EMLF')">
+          <span class="code">EMLF</span>
+          <span class="meta-wrap">
+            <span class="name">奢侈品与时尚管理硕士</span>
+            <span class="desc">Executive Master in Luxury &amp; Fashion Management</span>
+          </span>
+        </button>
+        <button class="prog" id="prog-EMEM" onclick="selectProgram('EMEM')">
+          <span class="code">EMEM</span>
+          <span class="meta-wrap">
+            <span class="name">教育管理硕士</span>
+            <span class="desc">Executive Master in Education Management</span>
+          </span>
+        </button>
+      </div>
+    </section>
+
+    <!-- Submit -->
+    <div class="submit-wrap">
+      <button class="submit" id="submit" disabled onclick="generateContent()">
+        <span id="submit-text">请先选择上方的典礼场景</span>
+        <span class="arrow">→</span>
+      </button>
+    </div>
+
+    <!-- Output -->
+    <div class="output-wrap hidden" id="output-wrap">
+      <div class="section-head" style="margin-bottom:14px;">
+        <div class="section-title">
+          <span class="step" id="step3">3</span>
+          <span>专属打卡文案</span>
+        </div>
+        <span class="section-hint">CONTENU</span>
+      </div>
+      <div class="output-card">
+        <div class="output-accent"></div>
+        <div class="output-head">
+          <span class="label" id="output-label">PSB 开学打卡</span>
+          <span class="seal">巴黎商学院 · 官方</span>
+        </div>
+        <div class="output-body" id="content-container"></div>
+        <div class="output-footer">
+          <button class="copy-btn" id="copy-btn" onclick="copyContent()">
+            <span>一键复制 · 去小红书发布</span>
+            <span>→</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="foot">
+      <div class="divider">
+        <span class="bar"></span>
+        <span class="mid"><b></b><i></i></span>
+        <span>PSB · Paris</span>
+        <span class="mid"><b></b><i></i></span>
+        <span class="bar"></span>
+      </div>
+      <div class="official">巴黎商学院官方招生中心</div>
+    </div>
+
+  </div>
+
+  <!-- Toast -->
+  <div class="toast" id="toast">
+    <span class="ico" id="toast-ico">✓</span>
+    <span id="toast-text">复制成功</span>
+  </div>
+
+<script>
+const copywritingDatabase = {
+  opening: {
+    EMIF: [
+      "🎓开学典礼打卡｜在职人的金融进阶开始了\n今天参加巴黎商学院PSB开学典礼，终于有了「我真的开始读研了」的实感。选择高级国际金融硕士，是想把工作里零散的财务、投融资和资本市场经验，系统补成一套能长期使用的能力。PSB成立于1974年，是国家认可的法国商科管理学院，也是法国精英制商学院大学校联盟成员，同时拥有AACSB、EQUIS、AMBA三大认证。线上学习对在职人很友好，也更考验自律。希望接下来的课程，能让我在每一次业务判断里更稳、更清醒。",
+      "💼开学典礼后，我决定认真升级金融能力\n参加完巴黎商学院PSB开学典礼，心里最强烈的感受是：在职学习不是逃离工作，而是把工作里的问题带回课堂重新拆解。读高级国际金融硕士，是想系统补齐国际金融、风险管理、投融资决策这些能力。PSB是国家认可的法国商科管理学院，拥有AACSB、EQUIS、AMBA三大认证，在全法商学院和POST-BAC项目榜单中都位居第4。接下来一边工作一边线上学习，时间会紧，但目标也更清楚：把金融思维真正用到实际决策里。"
+    ],
+    EMAP: [
+      "🧠开学典礼打卡｜开始系统学习心理学管理\n今天参加巴黎商学院PSB开学典礼，最真实的感受是：工作越久，越发现管理不是只看流程和KPI，很多问题背后都是人的动机、沟通和情绪。选择应用心理学管理硕士，是想把过去靠经验处理团队问题的方式，升级成更有方法论的专业能力。PSB成立于1974年，是国家认可的法国商科管理学院，同时拥有AACSB、EQUIS、AMBA三大认证。线上学习很适合在职节奏，也提醒我要把每一节课都落到真实工作里。",
+      "📚开学典礼之后，给自己一个新的管理课题\n参加巴黎商学院PSB开学典礼时，我突然意识到，自己想提升的不只是职位，而是看懂组织和人的能力。应用心理学管理硕士对我来说很适合：一边保持工作节奏，一边系统学习组织行为、沟通、激励和决策心理。PSB是法国精英制商学院大学校联盟成员，拥有AACSB、EQUIS、AMBA三大认证，学术背景让我更安心。接下来的线上学习，希望我能少一点凭感觉管理，多一点专业判断和长期耐心。"
+    ],
+    EMLF: [
+      "👜开学典礼打卡｜把审美热爱变成专业能力\n今天参加巴黎商学院PSB开学典礼，感觉自己终于把对奢侈品和时尚的兴趣，认真放进了一段系统学习里。选择奢侈品与时尚管理硕士，不只是因为喜欢品牌和美学，更想理解高端消费、品牌叙事、零售运营和客户体验背后的商业逻辑。PSB成立于1974年，是国家认可的法国商科管理学院，拥有AACSB、EQUIS、AMBA三大认证，在全法商学院排名中位居前列。线上学习对在职人来说很友好，也需要把热爱变成持续行动。",
+      "✨开学典礼后，认真开始我的时尚管理进阶\n参加巴黎商学院PSB开学典礼后，最想记录的是：喜欢时尚是一回事，真正理解品牌如何被管理、被运营、被长期塑造，是另一回事。读奢侈品与时尚管理硕士，是想把审美判断、市场洞察和商业思维放在同一个系统里学习。PSB是国家认可的法国商科管理学院，同时拥有AACSB、EQUIS、AMBA三大认证，POST-BAC项目排名全法第4。接下来用线上学习兼顾工作和成长，希望自己慢慢成为更专业的品牌管理者。"
+    ],
+    EMEM: [
+      "📚开学典礼打卡｜教育管理这条路重新启程\n今天参加巴黎商学院PSB开学典礼，心里有一种很踏实的开始感。做教育相关工作越久，越发现情怀很重要，但系统管理能力同样重要。选择教育管理硕士，是想把学校运营、组织治理、团队协作和战略决策这些内容系统补起来。PSB成立于1974年，是国家认可的法国商科管理学院，拥有AACSB、EQUIS、AMBA三大认证，也在全法商学院榜单中位居前列。线上学习适合在职节奏，接下来希望把课程里学到的方法，慢慢用回真实教育场景。",
+      "🎓参加开学典礼后，给教育人的自己充一次电\n巴黎商学院PSB开学典礼结束后，我更确定这次读教育管理硕士不是一时冲动。每天在教育现场处理问题，越能感受到管理不是简单排课、招生或沟通，而是长期的组织能力建设。PSB是国家认可的法国商科管理学院，成立于1974年，同时拥有AACSB、EQUIS、AMBA三大认证，学术和商科背景都很扎实。接下来的线上学习，我想把教育经验和管理方法真正结合起来，让自己在专业路上走得更稳。"
+    ]
+  },
+  graduation: {
+    EMIF: [
+      "🎓毕业典礼打卡｜这段金融学习终于结课了\n今天参加巴黎商学院PSB毕业典礼，回头看这段线上学习，最深的感受是：在职读硕士真的不轻松。白天处理工作，晚上消化课程，把国际金融、资本市场、风险管理和投融资逻辑一点点串起来，过程很累，但很值得。PSB成立于1974年，是国家认可的法国商科管理学院，拥有AACSB、EQUIS、AMBA三大认证，也在全法商学院排名中位居前列。对我来说，毕业不是结束，而是把这套更系统的金融思维带回实际业务里，继续做更稳的判断。",
+      "💹毕业典礼这天，想感谢坚持读完的自己\n参加巴黎商学院PSB毕业典礼，才发现这1年的碎片时间真的被自己攒成了成果。从一开始只想补金融知识，到后来能更系统地看公司金融、投资逻辑、风险控制和全球市场，我能感觉到思维方式在变化。PSB是法国精英制商学院大学校联盟成员，拥有AACSB、EQUIS、AMBA三大认证，办学背景扎实。线上学习没有想象中轻松，但它让我在工作之外重新建立学习节奏。毕业快乐，也继续保持清醒的金融判断力。"
+    ],
+    EMAP: [
+      "🎓毕业典礼打卡｜心理学管理这段路走完了\n今天参加巴黎商学院PSB毕业典礼，才真正意识到这段在职学习已经告一段落。过去很多管理问题，我会先找流程和制度的原因；读完应用心理学管理硕士后，更能看到沟通、动机、认知偏差和团队关系的影响。PSB是国家认可的法国商科管理学院，成立于1974年，拥有AACSB、EQUIS、AMBA三大认证，学术背景扎实。线上学习需要强自律，也让我学会在工作中马上验证课程方法。毕业这一刻，很感谢那个没有半途放弃的自己。",
+      "🧠毕业典礼后，发现自己看团队的方式变了\n参加巴黎商学院PSB毕业典礼时，脑子里闪过很多边工作边学习的晚上。应用心理学管理硕士带给我的，不只是几个理论名词，而是看待团队、沟通和决策的新角度。以前遇到管理问题容易急着给答案，现在会先观察人的需求、情绪和动机。PSB成立于1974年，是国家认可的法国商科管理学院，拥有AACSB、EQUIS、AMBA三大认证。毕业不是终点，更像提醒我把专业方法继续用在真实管理里。"
+    ],
+    EMLF: [
+      "👜毕业典礼打卡｜把热爱读成了专业底气\n今天参加巴黎商学院PSB毕业典礼，最想说的是：这段奢侈品与时尚管理硕士学习，让我对品牌的理解更完整了。以前看的是设计、审美和流行，现在更会去想品牌定位、客户体验、渠道运营和长期价值。PSB是国家认可的法国商科管理学院，成立于1974年，拥有AACSB、EQUIS、AMBA三大认证，在全法商学院排名中位居前列。线上学习并不轻松，但它让我在工作和热爱之间找到了更专业的连接。毕业快乐，继续向前。",
+      "✨毕业典礼这天，重新理解了时尚管理\n参加巴黎商学院PSB毕业典礼，突然觉得自己这一段学习很像给热爱装上了商业框架。奢侈品与时尚管理硕士让我不只关注好不好看，也开始理解品牌资产、零售体验、消费者洞察和可持续运营。PSB成立于1974年，是法国精英制商学院大学校联盟成员，拥有AACSB、EQUIS、AMBA三大认证，POST-BAC项目排名全法第4。线上学习考验时间管理，但也让我在工作之外持续进步。愿自己带着更专业的眼光继续走下去。"
+    ],
+    EMEM: [
+      "📚毕业典礼打卡｜教育管理这段学习很值得\n今天参加巴黎商学院PSB毕业典礼，回头看教育管理硕士这段线上学习，真的有很多感慨。做教育工作久了，很容易被日常事务推着走，而课程让我重新看见组织治理、项目运营、团队协作和战略规划的重要性。PSB是国家认可的法国商科管理学院，成立于1974年，拥有AACSB、EQUIS、AMBA三大认证，也在全法商学院榜单中位居前列。在职学习不容易，但它让我把经验慢慢沉淀成方法。毕业这一刻，感谢坚持到最后的自己。",
+      "🎓毕业典礼之后，继续做更专业的教育管理者\n参加巴黎商学院PSB毕业典礼时，我最强烈的感受不是结束，而是终于把过去零散的教育管理经验重新梳理了一遍。读教育管理硕士，让我更系统地理解机构运营、人才培养、管理决策和长期发展。PSB成立于1974年，是国家认可的法国商科管理学院，拥有AACSB、EQUIS、AMBA三大认证，学术背景和商科视角都很扎实。线上学习需要自律，也让我在工作中不断验证所学。毕业快乐，接下来继续把教育这件事做深。"
+    ]
+  }
+};
+
+const generalTags = "#巴黎商学院 #布克在职研 #布克硕博 #在职研究生 #在职硕士";
+const programTags = {
+  EMIF: "#金融硕士 #金融",
+  EMAP: "#心理学硕士 #心理学",
+  EMLF: "#奢侈品与时尚管理硕士 #时尚管理硕士",
+  EMEM: "#教育管理硕士 #教育管理"
+};
+
+const copyRules = {
+  titleMinChars: 18,
+  titleMaxChars: 20,
+  minChars: 250,
+  maxChars: 300,
+  duration: "1年",
+  bannedTerms: ["塞纳", "法国巴黎", "远赴巴黎", "巴黎金融", "奢侈品之都", "时尚之都", "身在法国", "身在巴黎", "在巴黎", "去巴黎", "巴黎参加", "上海", "法国留学", "巴黎留学"],
+  requiredGeneralTags: generalTags.split(/\s+/)
+};
+
+const aiPromptRules = [
+  "标题控制在18-20个字之间。",
+  "正文必须是小红书风格、真实学员视角。",
+  "根据用户选择的开学典礼或毕业典礼输出对应场景文案。",
+  "正文控制在250-300字之间，并明确提及学制1年。",
+  "不得提及身在法国巴黎、去巴黎、塞纳河畔、上海等地点表达，只写参加典礼。",
+  "内容保持真实，只使用巴黎商学院给定事实。",
+  "必须带通用标签和所选专业对应标签。"
+];
+
+const sceneNotes = {
+  opening: "给今天的自己做个记录，也提醒接下来1年的我别只收藏目标，要按时上课、认真复盘，把每一次输入变成真实进步。",
+  graduation: "给这1年的学习做个记录，也提醒毕业后的我别把学习停在典礼这天，要继续复盘、继续实践，把所学变成长期能力。"
+};
+
+let currentMode = null;
+let currentProgram = 'EMIF';
+let isGenerating = false;
+
+function setMode(mode){
+  if (isGenerating) return;
+  currentMode = mode;
+
+  document.getElementById('mode-opening').classList.remove('active','opening','graduation');
+  document.getElementById('mode-graduation').classList.remove('active','opening','graduation');
+  document.body.classList.remove('mode-opening','mode-graduation','mode-none');
+
+  if (mode==='opening'){
+    document.getElementById('mode-opening').classList.add('active','opening');
+    document.body.classList.add('mode-opening');
+  } else {
+    document.getElementById('mode-graduation').classList.add('active','graduation');
+    document.body.classList.add('mode-graduation');
+  }
+
+  const sub = document.getElementById('submit');
+  const subTxt = document.getElementById('submit-text');
+  sub.disabled = false;
+  sub.classList.remove('opening','graduation');
+  sub.classList.add(mode);
+  subTxt.textContent = mode==='opening' ? '生成开学打卡文案' : '生成毕业打卡文案';
+
+  document.getElementById('output-label').textContent = mode==='opening' ? 'PSB 开学打卡' : 'PSB 毕业打卡';
+}
+
+function selectProgram(p){
+  if (isGenerating) return;
+  currentProgram = p;
+  ['EMIF','EMAP','EMLF','EMEM'].forEach(k=>{
+    document.getElementById('prog-'+k).classList.remove('selected');
+  });
+  document.getElementById('prog-'+p).classList.add('selected');
+}
+
+async function generateContent(){
+  if (isGenerating || !currentMode) return;
+  isGenerating = true;
+  const wrap = document.getElementById('output-wrap');
+  const container = document.getElementById('content-container');
+  const sub = document.getElementById('submit');
+  const subTxt = document.getElementById('submit-text');
+
+  subTxt.textContent = '文案生成中...';
+  sub.disabled = true;
+
+  wrap.classList.remove('hidden');
+  wrap.classList.add('reveal');
+  container.innerHTML = '<div class="skeleton"><div class="spinner"></div><div class="txt">PSB 打卡文案 · 定制生成中</div></div>';
+
+  setTimeout(()=>{
+    wrap.scrollIntoView({behavior:'smooth',block:'start'});
+  },80);
+
+  try {
+    let full = null;
+    try {
+      full = await requestApiContent(currentMode, currentProgram);
+    } catch (err) {
+      console.warn('API generation failed, using local fallback:', err);
+    }
+
+    if (!full) full = buildFallbackContent(currentMode, currentProgram);
+    renderGeneratedContent(container, full);
+  } finally {
+    sub.disabled = false;
+    subTxt.textContent = currentMode==='opening' ? '换一篇开学文案' : '换一篇毕业文案';
+    isGenerating = false;
+
+    const copyBtn = document.getElementById('copy-btn');
+    copyBtn.classList.remove('opening','graduation');
+    copyBtn.classList.add(currentMode);
+  }
+}
+
+async function requestApiContent(mode, program){
+  if (location.protocol === 'file:') return null;
+
+  const res = await fetch('/api/generate', {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({mode, program})
+  });
+  if (!res.ok) throw new Error('API returned ' + res.status);
+
+  const data = await res.json();
+  return data.content || null;
+}
+
+function buildFallbackContent(mode, program){
+  const templates = copywritingDatabase[mode][program];
+  const txt = templates[Math.floor(Math.random()*templates.length)];
+  return txt + '\n\n' + sceneNotes[mode] + '\n\n' + generalTags + '\n' + programTags[program];
+}
+
+function renderGeneratedContent(container, full){
+  container.innerHTML = full.split('\n').map((line,i)=>{
+    if (i===0) return '<div class="first-line">'+escapeHtml(line)+'</div>';
+    if (line.trim().startsWith('#')) {
+      const tags = line.trim().split(/\s+/).map(t=>'<span class="tag">'+escapeHtml(t)+'</span>').join('');
+      return '<div style="margin-top:4px;">'+tags+'</div>';
+    }
+    if (line.trim()==='') return '<div style="height:4px;"></div>';
+    return '<p>'+escapeHtml(line)+'</p>';
+  }).join('');
+}
+
+function escapeHtml(s){
+  return s.replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c]));
+}
+
+function copyContent(){
+  const text = document.getElementById('content-container').innerText;
+  if (navigator.clipboard){
+    navigator.clipboard.writeText(text).then(()=>showToast('复制成功 · 可粘贴至小红书','ok')).catch(()=>fallbackCopy(text));
+  } else {
+    fallbackCopy(text);
+  }
+}
+function fallbackCopy(text){
+  const ta = document.createElement('textarea');
+  ta.value = text; ta.style.position='absolute'; ta.style.left='-9999px';
+  document.body.appendChild(ta); ta.select();
+  try { document.execCommand('copy'); showToast('复制成功','ok'); }
+  catch(e){ showToast('请手动选择文本复制','err'); }
+  document.body.removeChild(ta);
+}
+
+function showToast(msg, type){
+  const t = document.getElementById('toast');
+  const txt = document.getElementById('toast-text');
+  const ico = document.getElementById('toast-ico');
+  txt.textContent = msg;
+  t.classList.remove('ok','err');
+  t.classList.add(type);
+  ico.textContent = type==='err' ? '!' : '✓';
+  t.classList.add('show');
+  clearTimeout(t._timer);
+  t._timer = setTimeout(()=>t.classList.remove('show'), 2600);
+}
+
+selectProgram('EMIF');
+</script>
+</body>
+</html>
