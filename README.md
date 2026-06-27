@@ -41,32 +41,34 @@ STATS_TOKEN=自己设置一个查看统计用的密码，可选
 
 不要把真实 API Key 提交到 GitHub。
 
-## 二维码扫码统计
+## 复制文案统计
 
-生成二维码时，不要直接使用首页地址，改用统计入口：
+二维码可以继续使用入口地址，方便给不同海报加来源：
 
 ```txt
 https://你的域名/scan
 ```
 
-用户扫码访问 `/scan` 时，服务端会记录 1 次扫描，然后自动跳转到首页。
+用户扫码访问 `/scan` 时会自动跳转到首页；真正的统计发生在用户点击“复制文案”并复制成功之后。
 
 查看统计：
 
 ```txt
-https://你的域名/api/scan-stats
+https://你的域名/api/copy-stats
 ```
 
 如果设置了 `STATS_TOKEN`，查看统计时使用：
 
 ```txt
-https://你的域名/api/scan-stats?token=你的STATS_TOKEN
+https://你的域名/api/copy-stats?token=你的STATS_TOKEN
 ```
 
-也可以给不同海报加来源参数，例如：
+不同海报可以继续加来源参数，例如：
 
 ```txt
 https://你的域名/scan?campaign=poster-a
 ```
 
-当前统计会写入服务端本地 `data/scan-stats.json`。如果活动数据需要长期保留，建议在正式环境把 `DATA_DIR` 指向持久存储目录，或后续改接数据库。
+这样用户从该海报进入并复制文案后，会记录到 `byCampaign.poster-a`。
+
+当前统计会写入服务端本地 `data/copy-stats.json`。如果活动数据需要长期保留，建议在正式环境把 `DATA_DIR` 指向持久存储目录，或后续改接数据库。

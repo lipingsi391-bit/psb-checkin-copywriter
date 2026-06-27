@@ -7,7 +7,7 @@ const PORT = Number(process.env.PORT || 3000);
 const HOST = process.env.HOST || '0.0.0.0';
 const MAX_BODY_BYTES = 1024 * 32;
 const DATA_DIR = process.env.DATA_DIR || path.join(ROOT, 'data');
-const STATS_FILE = process.env.STATS_FILE || path.join(DATA_DIR, 'scan-stats.json');
+const COPY_STATS_FILE = process.env.COPY_STATS_FILE || process.env.STATS_FILE || path.join(DATA_DIR, 'copy-stats.json');
 const STATS_TIME_ZONE = process.env.STATS_TIME_ZONE || 'Asia/Shanghai';
 
 loadDotEnv(path.join(ROOT, '.env'));
@@ -82,8 +82,16 @@ const server = http.createServer(async (req, res) => {
       return handleScan(req, res, url);
     }
 
+    if (req.method === 'POST' && url.pathname === '/api/copy-event') {
+      return handleCopyEvent(req, res);
+    }
+
+    if (req.method === 'GET' && url.pathname === '/api/copy-stats') {
+      return handleCopyStats(req, res, url);
+    }
+
     if (req.method === 'GET' && url.pathname === '/api/scan-stats') {
-      return handleScanStats(req, res, url);
+      return handleCopyStats(req, res, url);
     }
 
     if (req.method === 'POST' && url.pathname === '/api/generate') {
@@ -106,12 +114,6 @@ server.listen(PORT, HOST, () => {
 });
 
 function handleScan(req, res, url) {
-  try {
-    recordScan(url);
-  } catch (err) {
-    console.error('Failed to record scan:', err);
-  }
-
   const target = normalizeRedirectPath(url.searchParams.get('to')) || '/';
   res.writeHead(302, {
     Location: target,
@@ -120,21 +122,40 @@ function handleScan(req, res, url) {
   res.end();
 }
 
-function handleScanStats(req, res, url) {
+async function handleCopyEvent(req, res) {
+  const body = await readJsonBody(req);
+  try {
+    const stats = recordCopy(body);
+    const todayKey = getDateKey();
+    return sendJson(res, 200, {
+      ok: true,
+      total: stats.total,
+      today: stats.byDate[todayKey] || 0
+    });
+  } catch (err) {
+    console.error('Failed to record copy event:', err);
+    return sendJson(res, 500, { error: 'COPY_EVENT_FAILED' });
+  }
+}
+
+function handleCopyStats(req, res, url) {
   if (!isStatsRequestAuthorized(req, url)) {
     return sendJson(res, 401, { error: 'UNAUTHORIZED' });
   }
 
-  const stats = readScanStats();
+  const stats = readCopyStats();
   const todayKey = getDateKey();
   return sendJson(res, 200, {
+    metric: 'copy',
     total: stats.total,
     today: stats.byDate[todayKey] || 0,
     todayKey,
     timeZone: STATS_TIME_ZONE,
     byDate: stats.byDate,
+    byMode: stats.byMode,
+    byProgram: stats.byProgram,
     byCampaign: stats.byCampaign,
-    lastScannedAt: stats.lastScannedAt,
+    lastCopiedAt: stats.lastCopiedAt,
     updatedAt: stats.updatedAt
   });
 }
@@ -309,55 +330,64 @@ function loadDotEnv(filePath) {
   }
 }
 
-function recordScan(url) {
-  const campaign = sanitizeCounterKey(url.searchParams.get('campaign') || 'default');
-  const stats = readScanStats();
+function recordCopy(body = {}) {
+  const campaign = sanitizeCounterKey(body.campaign || 'default');
+  const mode = MODES[body.mode] ? body.mode : 'unknown';
+  const program = PROGRAMS[body.program] ? body.program : 'unknown';
   const now = new Date().toISOString();
   const dateKey = getDateKey(new Date(now));
+  const stats = readCopyStats();
 
   stats.createdAt ||= now;
   stats.total = Number(stats.total || 0) + 1;
   stats.byDate[dateKey] = Number(stats.byDate[dateKey] || 0) + 1;
+  stats.byMode[mode] = Number(stats.byMode[mode] || 0) + 1;
+  stats.byProgram[program] = Number(stats.byProgram[program] || 0) + 1;
   stats.byCampaign[campaign] = Number(stats.byCampaign[campaign] || 0) + 1;
-  stats.lastScannedAt = now;
+  stats.lastCopiedAt = now;
   stats.updatedAt = now;
 
-  writeScanStats(stats);
+  writeCopyStats(stats);
   return stats;
 }
 
-function readScanStats() {
+function readCopyStats() {
   const fallback = {
+    metric: 'copy',
     total: 0,
     byDate: {},
+    byMode: {},
+    byProgram: {},
     byCampaign: {},
     createdAt: null,
     updatedAt: null,
-    lastScannedAt: null
+    lastCopiedAt: null
   };
 
-  if (!fs.existsSync(STATS_FILE)) return fallback;
+  if (!fs.existsSync(COPY_STATS_FILE)) return fallback;
 
   try {
-    const parsed = JSON.parse(fs.readFileSync(STATS_FILE, 'utf8'));
+    const parsed = JSON.parse(fs.readFileSync(COPY_STATS_FILE, 'utf8'));
     return {
       ...fallback,
       ...parsed,
       total: Number(parsed.total || 0),
       byDate: parsed.byDate && typeof parsed.byDate === 'object' ? parsed.byDate : {},
+      byMode: parsed.byMode && typeof parsed.byMode === 'object' ? parsed.byMode : {},
+      byProgram: parsed.byProgram && typeof parsed.byProgram === 'object' ? parsed.byProgram : {},
       byCampaign: parsed.byCampaign && typeof parsed.byCampaign === 'object' ? parsed.byCampaign : {}
     };
   } catch (err) {
-    console.error('Failed to read scan stats:', err);
+    console.error('Failed to read copy stats:', err);
     return fallback;
   }
 }
 
-function writeScanStats(stats) {
+function writeCopyStats(stats) {
   fs.mkdirSync(DATA_DIR, { recursive: true });
-  const tempFile = `${STATS_FILE}.tmp`;
+  const tempFile = `${COPY_STATS_FILE}.tmp`;
   fs.writeFileSync(tempFile, `${JSON.stringify(stats, null, 2)}\n`);
-  fs.renameSync(tempFile, STATS_FILE);
+  fs.renameSync(tempFile, COPY_STATS_FILE);
 }
 
 function getDateKey(date = new Date()) {

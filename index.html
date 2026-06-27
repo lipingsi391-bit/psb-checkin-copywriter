@@ -729,7 +729,10 @@ function escapeHtml(s){
 function copyContent(){
   const text = document.getElementById('content-container').innerText;
   if (navigator.clipboard){
-    navigator.clipboard.writeText(text).then(()=>showToast('复制成功 · 可粘贴至小红书','ok')).catch(()=>fallbackCopy(text));
+    navigator.clipboard.writeText(text).then(()=>{
+      showToast('复制成功 · 可粘贴至小红书','ok');
+      trackCopyEvent();
+    }).catch(()=>fallbackCopy(text));
   } else {
     fallbackCopy(text);
   }
@@ -738,9 +741,36 @@ function fallbackCopy(text){
   const ta = document.createElement('textarea');
   ta.value = text; ta.style.position='absolute'; ta.style.left='-9999px';
   document.body.appendChild(ta); ta.select();
-  try { document.execCommand('copy'); showToast('复制成功','ok'); }
+  try {
+    const copied = document.execCommand('copy');
+    if (!copied) throw new Error('copy failed');
+    showToast('复制成功','ok');
+    trackCopyEvent();
+  }
   catch(e){ showToast('请手动选择文本复制','err'); }
   document.body.removeChild(ta);
+}
+
+function trackCopyEvent(){
+  if (location.protocol === 'file:') return;
+
+  const payload = JSON.stringify({
+    mode: currentMode,
+    program: currentProgram,
+    campaign: new URLSearchParams(location.search).get('campaign') || 'default'
+  });
+
+  if (navigator.sendBeacon) {
+    const sent = navigator.sendBeacon('/api/copy-event', new Blob([payload], {type: 'application/json'}));
+    if (sent) return;
+  }
+
+  fetch('/api/copy-event', {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: payload,
+    keepalive: true
+  }).catch((err)=>console.warn('Copy tracking failed:', err));
 }
 
 function showToast(msg, type){
