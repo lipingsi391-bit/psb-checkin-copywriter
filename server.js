@@ -6,6 +6,9 @@ const ROOT = __dirname;
 const PORT = Number(process.env.PORT || 3000);
 const HOST = process.env.HOST || '0.0.0.0';
 const MAX_BODY_BYTES = 1024 * 32;
+const DATA_DIR = process.env.DATA_DIR || path.join(ROOT, 'data');
+const STATS_FILE = process.env.STATS_FILE || path.join(DATA_DIR, 'scan-stats.json');
+const STATS_TIME_ZONE = process.env.STATS_TIME_ZONE || 'Asia/Shanghai';
 
 loadDotEnv(path.join(ROOT, '.env'));
 
@@ -75,6 +78,14 @@ const server = http.createServer(async (req, res) => {
       return sendJson(res, 200, { ok: true });
     }
 
+    if (req.method === 'GET' && url.pathname === '/scan') {
+      return handleScan(req, res, url);
+    }
+
+    if (req.method === 'GET' && url.pathname === '/api/scan-stats') {
+      return handleScanStats(req, res, url);
+    }
+
     if (req.method === 'POST' && url.pathname === '/api/generate') {
       return handleGenerate(req, res);
     }
@@ -93,6 +104,40 @@ const server = http.createServer(async (req, res) => {
 server.listen(PORT, HOST, () => {
   console.log(`PSB check-in copywriter running on http://${HOST}:${PORT}`);
 });
+
+function handleScan(req, res, url) {
+  try {
+    recordScan(url);
+  } catch (err) {
+    console.error('Failed to record scan:', err);
+  }
+
+  const target = normalizeRedirectPath(url.searchParams.get('to')) || '/';
+  res.writeHead(302, {
+    Location: target,
+    'Cache-Control': 'no-store'
+  });
+  res.end();
+}
+
+function handleScanStats(req, res, url) {
+  if (!isStatsRequestAuthorized(req, url)) {
+    return sendJson(res, 401, { error: 'UNAUTHORIZED' });
+  }
+
+  const stats = readScanStats();
+  const todayKey = getDateKey();
+  return sendJson(res, 200, {
+    total: stats.total,
+    today: stats.byDate[todayKey] || 0,
+    todayKey,
+    timeZone: STATS_TIME_ZONE,
+    byDate: stats.byDate,
+    byCampaign: stats.byCampaign,
+    lastScannedAt: stats.lastScannedAt,
+    updatedAt: stats.updatedAt
+  });
+}
 
 async function handleGenerate(req, res) {
   if (!process.env.ARK_API_KEY || !process.env.ARK_MODEL) {
@@ -212,7 +257,8 @@ function serveStatic(req, res, pathname) {
 
 function isHiddenOrIgnored(filePath) {
   const rel = path.relative(ROOT, filePath);
-  return rel.startsWith('.') || rel.split(path.sep).includes('node_modules') || rel === 'server.js' || rel === 'package.json';
+  const parts = rel.split(path.sep);
+  return rel.startsWith('.') || parts.includes('node_modules') || parts.includes('data') || rel === 'server.js' || rel === 'package.json';
 }
 
 function readJsonBody(req) {
@@ -237,7 +283,10 @@ function readJsonBody(req) {
 }
 
 function sendJson(res, status, payload) {
-  res.writeHead(status, { 'Content-Type': 'application/json; charset=utf-8' });
+  res.writeHead(status, {
+    'Content-Type': 'application/json; charset=utf-8',
+    'Cache-Control': 'no-store'
+  });
   res.end(JSON.stringify(payload));
 }
 
@@ -258,4 +307,86 @@ function loadDotEnv(filePath) {
     const value = trimmed.slice(eq + 1).trim().replace(/^["']|["']$/g, '');
     if (key && process.env[key] == null) process.env[key] = value;
   }
+}
+
+function recordScan(url) {
+  const campaign = sanitizeCounterKey(url.searchParams.get('campaign') || 'default');
+  const stats = readScanStats();
+  const now = new Date().toISOString();
+  const dateKey = getDateKey(new Date(now));
+
+  stats.createdAt ||= now;
+  stats.total = Number(stats.total || 0) + 1;
+  stats.byDate[dateKey] = Number(stats.byDate[dateKey] || 0) + 1;
+  stats.byCampaign[campaign] = Number(stats.byCampaign[campaign] || 0) + 1;
+  stats.lastScannedAt = now;
+  stats.updatedAt = now;
+
+  writeScanStats(stats);
+  return stats;
+}
+
+function readScanStats() {
+  const fallback = {
+    total: 0,
+    byDate: {},
+    byCampaign: {},
+    createdAt: null,
+    updatedAt: null,
+    lastScannedAt: null
+  };
+
+  if (!fs.existsSync(STATS_FILE)) return fallback;
+
+  try {
+    const parsed = JSON.parse(fs.readFileSync(STATS_FILE, 'utf8'));
+    return {
+      ...fallback,
+      ...parsed,
+      total: Number(parsed.total || 0),
+      byDate: parsed.byDate && typeof parsed.byDate === 'object' ? parsed.byDate : {},
+      byCampaign: parsed.byCampaign && typeof parsed.byCampaign === 'object' ? parsed.byCampaign : {}
+    };
+  } catch (err) {
+    console.error('Failed to read scan stats:', err);
+    return fallback;
+  }
+}
+
+function writeScanStats(stats) {
+  fs.mkdirSync(DATA_DIR, { recursive: true });
+  const tempFile = `${STATS_FILE}.tmp`;
+  fs.writeFileSync(tempFile, `${JSON.stringify(stats, null, 2)}\n`);
+  fs.renameSync(tempFile, STATS_FILE);
+}
+
+function getDateKey(date = new Date()) {
+  return new Intl.DateTimeFormat('en-CA', {
+    timeZone: STATS_TIME_ZONE,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit'
+  }).format(date);
+}
+
+function sanitizeCounterKey(value) {
+  const normalized = String(value || 'default').trim().toLowerCase().replace(/[^a-z0-9_-]+/g, '-').replace(/^-+|-+$/g, '');
+  return normalized.slice(0, 64) || 'default';
+}
+
+function normalizeRedirectPath(value) {
+  if (!value) return '/';
+  const trimmed = String(value).trim();
+  if (!trimmed.startsWith('/') || trimmed.startsWith('//')) return '/';
+  return trimmed;
+}
+
+function isStatsRequestAuthorized(req, url) {
+  const token = process.env.STATS_TOKEN;
+  if (!token) return true;
+
+  const queryToken = url.searchParams.get('token');
+  const authHeader = req.headers.authorization || '';
+  const bearerToken = authHeader.startsWith('Bearer ') ? authHeader.slice(7).trim() : '';
+  return queryToken === token || bearerToken === token;
 }

@@ -6,6 +6,7 @@
 node_modules/
 npm-debug.log*
 *.zip
+data/
 
 # Local design/source artifacts, not needed by the public static site.
 screenshots/
